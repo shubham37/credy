@@ -39,13 +39,13 @@ class Signup(APIView):
                     access = AccessToken.for_user(created)
 
                     tokens = {
-                        'access_access': str(access.get('jti')),
+                        'access_token': str(access.get('jti')),
                     }
                     return Response(data=tokens, status=status.HTTP_201_CREATED)
                 except Exception as e:
                     return Response(e.args, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
-            return Response(e.detail, status=e.status_code)
+            return Response(e.args, status=e.status_code)
 
 
 class CollectionViewSet(ViewSet):
@@ -90,16 +90,16 @@ class CollectionViewSet(ViewSet):
     # Create collection with movies
     def create(self, request):
         user = request.user
-        data = request.data[0]
+        data = request.data
         try:
             collection = self.serializer_class(data=data)
             if collection.is_valid(raise_exception=True):
                 collection = collection.save()
                 uc, _ = UserCollection.objects.get_or_create(user=user)
                 uc.collections.add(collection)
+                return Response(data={"collection_uuid": collection.uuid}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response(e.args, status=status.HTTP_400_BAD_REQUEST)
-        return Response("Created Succesfully", status=status.HTTP_201_CREATED)
 
     # Retreive an object
     def retrieve(self, request, pk=None):
@@ -111,7 +111,7 @@ class CollectionViewSet(ViewSet):
 
     # Update an object
     def update(self, request, pk=None):
-        data = request.data[0]
+        data = request.data
         instance = self.get_object(request, pk)
         if instance.exists():
             serializer = self.serializer_class(instance.last(), data=data)
@@ -121,7 +121,7 @@ class CollectionViewSet(ViewSet):
                     return Response("Update Successfull", status=status.HTTP_202_ACCEPTED)
             except Exception as e:
                 return Response(e.args, status=status.HTTP_400_BAD_REQUEST)
-        return Response("This collection is not your collection", status=status.HTTP_404_NOT_FOUND)
+        return Response("This collection is not yours", status=status.HTTP_404_NOT_FOUND)
 
     # Delete an object
     def destroy(self, request, *args, **kwargs):
@@ -129,7 +129,7 @@ class CollectionViewSet(ViewSet):
         if collection.exists():
             collection.delete()
             return Response("Delete Successfully", status=status.HTTP_204_NO_CONTENT)
-        return Response("This collection is not your collection", status=status.HTTP_404_NOT_FOUND)
+        return Response("This collection is not yours", status=status.HTTP_404_NOT_FOUND)
 
 
 class MovieView(APIView):
@@ -148,7 +148,7 @@ class MovieView(APIView):
             serialize = MovieSerializer(page, many=True)
             return self.pagination_class.get_paginated_response(serialize.data)
         else:
-            return Response("No Content", status=status.HTTP_204_NO_CONTENT)
+            return Response("No Movie Available.", status=status.HTTP_204_NO_CONTENT)
 
 
 @retry

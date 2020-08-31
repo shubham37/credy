@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^register/$', Signup.as_view(), name='register'),
     url(r'^request_count/$', request_count, name='request_count'),
     url(r'^request_count/reset/$', reset_count, name='reset_count'),
-    url(r'^external_movies/$', MovieView.as_view(), name='internal_movie'),
+    url(r'^internal_movies/$', MovieView.as_view(), name='internal_movie'),
     url(r'^movies/$', movie_view, name='external_movie')
 ]
 
